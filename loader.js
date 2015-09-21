@@ -1,6 +1,7 @@
 var define, requireModule, require, requirejs;
 
 (function() {
+  'use strict';
 
   var _isArray;
   if (!Array.isArray) {
@@ -48,7 +49,7 @@ var define, requireModule, require, requirejs;
     return this._require || (this._require = function(dep) {
       return require(resolve(dep, name));
     });
-  }
+  };
 
   define = function(name, deps, callback) {
     if (arguments.length < 2) {
@@ -192,6 +193,6 @@ var define, requireModule, require, requirejs;
 
   requirejs.clear = function() {
     requirejs.entries = requirejs._eak_seen = registry = {};
-    seen = state = {};
+    seen = {};
   };
 })();
