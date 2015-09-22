@@ -385,3 +385,37 @@ test('unsee', function() {
   require('foo');
   equal(counter, 2);
 });
+
+
+module('loader.js mock support', {
+  teardown: function() {
+    requirejs.clear();
+  }
+});
+
+test('define with mocked module dependencies', function() {
+
+  define('foo', [], function() {
+    return 1;
+  });
+
+  define('bar', ['foo'], function(foo) {
+    return foo;
+  });
+
+  equal(require('bar', { foo: 2 }), 2, 'Able to mock module dependencies');
+  equal(require('bar'), 1, 'Module dependencies are restored');
+
+
+  define('foo/bar', [], function() {
+    return 3;
+  });
+
+  define('foo/baz', ['./bar'], function(baz) {
+    return baz;
+  });
+
+  equal(require('foo/baz', { './bar': 4 }), 4, 'mocked module paths can be relative');
+  equal(require('foo/baz'), 3, 'Module dependencies are restored');
+
+});

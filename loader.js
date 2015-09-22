@@ -117,8 +117,11 @@ var define, requireModule, require, requirejs;
   function missingModule(name) {
     throw new Error('Could not find module ' + name);
   }
-  requirejs = require = requireModule = function(name) {
+
+  requirejs = require = requireModule = function(name, mocks) {
     var mod = registry[name];
+
+    var originalDependencies = mocks ? loadMocks(name, mocks) : null;
 
     if (mod && mod.callback instanceof Alias) {
       mod = registry[mod.callback.name];
@@ -160,7 +163,13 @@ var define, requireModule, require, requirejs;
       obj['default'] = obj;
     }
 
-    return (seen[name] = obj);
+    seen[name] = obj;
+
+    if (mocks) {
+      unloadMocks(name, originalDependencies);
+    }
+
+    return obj;
   };
 
   function resolve(child, name) {
@@ -184,6 +193,31 @@ var define, requireModule, require, requirejs;
     }
 
     return parentBase.join('/');
+  }
+
+  function loadMocks(parent, mocks) {
+    var originalModules = {};
+    var path, name;
+
+    for (path in mocks) {
+      name = resolve(path, parent);
+      originalModules[name] = registry[name];
+      registry[name] = new Module(name, [], makeCallback(mocks[path]));
+    }
+
+    function makeCallback(exports) {
+      return function() { return exports; };
+    }
+
+    return originalModules;
+  }
+
+  function unloadMocks(name, originalModules) {
+    requirejs.unsee(name);
+    for (var depName in originalModules) {
+      requirejs.unsee(depName);
+      registry[depName] = originalModules[depName];
+    }
   }
 
   requirejs.entries = requirejs._eak_seen = registry;
